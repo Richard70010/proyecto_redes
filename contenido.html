@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Encabezado IPv4</title>
+    <style>
+        /* CSS BÁSICO PARA UN FORMULARIO SENCILLO Y BONITO */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            padding: 20px;
+        }
+
+        .contenedor {
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .campo {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 4px solid #ecf0f1;
+        }
+
+        label {
+            width: 180px;
+            font-weight: bold;
+            color: #34495e;
+            margin-right: 15px;
+        }
+
+        input[type="text"], 
+        input[type="number"], 
+        select, 
+        textarea {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-top: 5px;
+        }
+
+        select {
+            height: 40px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .generar {
+            background-color: #2ecc71;
+            color: white;
+            margin-right: 15px;
+        }
+        .generar:hover {
+            background-color: #27ae60;
+        }
+
+        #tosButton {
+            background-color: #3498db;
+            color: white;
+            margin-left: 10px;
+            flex-grow: 0;
+            width: auto;
+        }
+        #tosButton:hover {
+            background-color: #2980b9;
+        }
+
+        /* Modal Styling */
+        #modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4); 
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-contenido {
+            background-color: #fefefe;
+            padding: 30px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #resultado {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+
+        .modal-contenido button {
+            background-color: #e74c3c;
+            color: white;
+            float: right;
+        }
+        /* Estilo para notas de validación */
+        .nota {
+            font-size: 0.85em;
+            color: #888;
+            width: 100%;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="contenedor">
+
+    <h1>Encabezado IPv4</h1>
+
+    <div class="campo">
+        <label>Versión</label>
+        <input type="text" value="4" readonly>
+    </div>
+
+    <div class="campo">
+        <label>IHL (Longitud de encabezado)</label>
+        <select id="ihl" onchange="calcularLongitudTotal()">
+            <option value="5">5 (20 bytes - Sin Opciones)</option>
+            <option value="6">6 (24 bytes)</option>
+            <option value="7">7 (28 bytes)</option>
+            <option value="8">8 (32 bytes)</option>
+            <option value="9">9 (36 bytes)</option>
+            <option value="10">10 (40 bytes)</option>
+            <option value="15">15 (60 bytes - Máximo)</option>
+        </select>
+    </div>
+
+    <div class="campo">
+        <label>Tipo de Servicio (TOS)</label>
+        <select id="dscp">
+            <option value="0">0 (Normal)</option>
+            <option value="46">46 (EF - Baja latencia)</option>
+            <option value="32">32 (AF41 - Alta prioridad)</option>
+            <option value="8">8 (AF11 - Tráfico fondo)</option>
+        </select>
+        <select id="ecn">
+            <option value="0">0 (Desactivado)</option>
+            <option value="1">1 (Compatible ECN)</option>
+            <option value="3">3 (Congestión detectada)</option>
+        </select>
+        <button id="tosButton" type="button" onclick="generarTOS()">Generar TOS</button>
+        <input type="text" id="tos" placeholder="TOS (0-255) generado" readonly>
+    </div>
+
+    <hr> <div class="campo">
+        <label>Identificación (0 - 65535)</label>
+        <input type="number" id="identification" placeholder="Ej: 12345" min="0" max="65535">
+    </div>
+    
+    <div class="campo">
+        <label>Bandera DF (Don't Fragment)</label>
+        <select id="flagDF">
+            <option value="0">0: Permitir Fragmentación</option>
+            <option value="1">1: NO Fragmentar (Descartar si es necesario)</option>
+        </select>
+    </div>
+
+    <div class="campo">
+        <label>Bandera MF (More Fragments)</label>
+        <select id="flagMF">
+            <option value="0">0: Este es el ÚLTIMO fragmento</option>
+            <option value="1">1: Hay MÁS fragmentos después de este</option>
+        </select>
+    </div>
+
+    <div class="campo">
+        <label>Desplazamiento del Fragmento (Offset)</label>
+        <input type="number" id="fragmentOffset" placeholder="Ej: 50" min="0" max="8191">
+    </div>
+
+    <hr> <div class="campo">
+        <label>TTL (Tiempo de Vida)</label>
+        <input type="number" id="ttl" value="64" min="1" max="255">
+    </div>
+
+    <div class="campo">
+        <label>Protocolo (Capa 4)</label>
+        <select id="protocol">
+            <option value="1">1 (ICMP)</option>
+            <option value="6">6 (TCP)</option>
+            <option value="17">17 (UDP)</option>
+        </select>
+    </div>
+
+    <hr> <div class="campo">
+        <label>IP Origen</label>
+        <input type="text" id="src" placeholder="192.168.1.1">
+    </div>
+
+    <div class="campo">
+        <label>IP Destino</label>
+        <input type="text" id="dst" placeholder="192.168.1.254">
+    </div>
+
+    <hr> <div class="campo">
+        <label>Datos (Mensaje)</label>
+        <textarea id="datos" placeholder="Escribe el mensaje (caracteres legibles)..." oninput="calcularLongitudTotal()"></textarea>
+    </div>
+
+    <div style="text-align: center; margin-top: 25px;">
+        <button class="generar" onclick="generarValoresAleatorios()">🎲 Generar Campos Aleatorios</button>
+        <button class="generar" onclick="generarDatagrama()">✨ Generar Datagrama IPV4</button>
+    </div>
+
+</div>
+
+<div id="modal">
+    <div class="modal-contenido">
+        <h3>Datagrama IPv4 Generado</h3>
+        <pre id="resultado"></pre>
+        <button onclick="cerrarModal()">Cerrar</button>
+    </div>
+</div>
+
+<script src="ipv4.js"></script>
+
+</body>
+</html>
